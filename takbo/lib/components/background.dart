@@ -12,6 +12,6 @@ class Background extends SpriteComponent {
   @override
   FutureOr<void> onLoad() async {
     // TODO: implement onLoad
-    sprite = await Sprite.load('background.png');
+    sprite = await Sprite.load('og/Background 1.png');
   }
 }

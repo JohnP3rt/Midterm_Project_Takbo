@@ -6,7 +6,7 @@ import 'package:takbo/constants.dart';
 import 'package:takbo/game.dart';
 
 class Ground extends SpriteComponent
-    with HasGameRef<FlappyBirdGame>, CollisionCallbacks {
+    with HasGameRef<ManananggalGame>, CollisionCallbacks {
   Ground() : super();
 
   @override
@@ -14,7 +14,7 @@ class Ground extends SpriteComponent
     size = Vector2(2 * gameRef.size.x, groundHeight);
     position = Vector2(0, gameRef.size.y - groundHeight);
 
-    sprite = await Sprite.load('ground.png');
+    sprite = await Sprite.load('og/Ground_copy.png');
 
     add(RectangleHitbox());
   }
