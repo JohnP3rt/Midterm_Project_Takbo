@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:takbo/components/bird.dart';
+import 'package:takbo/components/manananggal.dart';
 import 'package:takbo/constants.dart';
 import 'package:takbo/game.dart';
 
 class FloatingPowerUp extends SpriteComponent
-    with CollisionCallbacks, HasGameRef<FlappyBirdGame> {
+    with CollisionCallbacks, HasGameRef<ManananggalGame> {
   FloatingPowerUp(Vector2 position, Vector2 size)
       : super(position: position, size: size);
 
@@ -26,7 +26,7 @@ class FloatingPowerUp extends SpriteComponent
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if (other is Bird) {
+    if (other is Manananggal) {
       gameRef.incrementScoreBy(5); // Grant 5 extra points
       removeFromParent();
     }

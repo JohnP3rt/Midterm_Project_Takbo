@@ -3,12 +3,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:takbo/game.dart';
 
-class ScoreText extends TextComponent with HasGameRef<FlappyBirdGame> {
+class ScoreText extends TextComponent with HasGameRef<ManananggalGame> {
   ScoreText()
       : super(
             text: '0',
             textRenderer: TextPaint(
-                style: TextStyle(color: Colors.grey.shade900, fontSize: 40)));
+                style: TextStyle(color: Colors.white, fontSize: 40,fontFamily: "PressStart2P")));
 
   @override
   FutureOr<void> onLoad() {
@@ -28,4 +28,6 @@ class ScoreText extends TextComponent with HasGameRef<FlappyBirdGame> {
       text = newText;
     }
   }
+
+  
 }
