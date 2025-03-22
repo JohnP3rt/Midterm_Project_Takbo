@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:takbo/game.dart';
 
 class GameOverHud extends StatelessWidget {
@@ -37,13 +36,16 @@ class GameOverHud extends StatelessWidget {
                           decoration: TextDecoration.none,
                           color: Colors.white,
                           fontFamily: "PressStart2P")),
-                  Text(game.score.toString(),
+                  Text(game.score.value.toString(),
                       style: TextStyle(
                           fontSize: 16,
                           decoration: TextDecoration.none,
                           color: Colors.white,
                           fontFamily: "PressStart2P")),
                 ],
+              ),
+              SizedBox(
+                height: 8,
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -7,25 +7,31 @@ import 'package:takbo/components/obstacle.dart';
 import 'package:takbo/constants.dart';
 import 'package:takbo/game.dart';
 
-class Manananggal extends SpriteAnimationComponent
-    with CollisionCallbacks, HasGameRef<ManananggalGame> {
-  Manananggal()
-      : super(
-            position: Vector2(playerStartX, playerStartY),
-            size: Vector2(playerWidth, playerHeight));
+class Manananggal extends SpriteAnimationComponent with CollisionCallbacks, HasGameRef<ManananggalGame> {
+  final Vector2 hiddenPosition = Vector2(-150, playerStartY); 
+  final Vector2 targetPosition = Vector2(playerStartX, playerStartY); 
+
+  Manananggal() : super( position: Vector2(playerStartX, playerStartY), size: Vector2(playerWidth, playerHeight));
 
   double velocity = 0;
-  bool isGliding = false; // Tracks whether the bird is gliding
+  bool isGliding = false; 
 
   @override
   FutureOr<void> onLoad() async {
     // TODO: implement onLoad
     final spriteSheet = await Flame.images.load('og/Manananggal.png');
     final data = SpriteAnimationData.sequenced(
-        textureSize: Vector2(150, 65), amount: 3, stepTime: 0.1, loop: true);
+      textureSize: Vector2(150, 65), 
+      amount: 6, 
+      stepTime: 0.12, 
+      loop: true
+    );
     animation = SpriteAnimation.fromFrameData(spriteSheet, data);
-    add(RectangleHitbox.relative(Vector2(0.8, 0.5),
-        parentSize: Vector2(playerWidth, playerHeight)));
+    add(RectangleHitbox.relative(
+      Vector2(0.8, 0.5),
+      parentSize: Vector2(playerWidth, playerHeight)
+    ));
+
     return super.onLoad();
   }
 
@@ -37,21 +43,27 @@ class Manananggal extends SpriteAnimationComponent
   void update(double dt) {
     // TODO: implement update
 
-    if (position.y < 0) {
-      position.y = 0;
-    }
-    position.x = -300;
-
-    if (game.gameStart) {
-      position.x += 400;
-      if (isGliding) {
-        velocity = glideUpwardVelocity; // Apply upward velocity when gliding
+    if (!gameRef.gameStart) {
+      position = hiddenPosition; // Keep off-screen before the game starts
+    } else {
+      // Smoothly move towards the target position
+      if (position.x < targetPosition.x) {
+        position.x += groundScrollingSpeed * dt; // Move to the right
       } else {
-        velocity += gravity * dt; // Apply gravity when not gliding
+        position.x = targetPosition.x; // Stop at the target position
+        // Gravity and jump mechanics
+        if (position.y < 0) {
+          position.y = 0;
+        }
+        if (isGliding) {
+          velocity = glideUpwardVelocity;
+        } else {
+          velocity += gravity * dt;
+        }
+
+        position.y += velocity * dt;
       }
     }
-
-    position.y += velocity * dt;
 
     super.update(dt);
   }

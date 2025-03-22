@@ -54,15 +54,9 @@ class ObstacleManager extends Component with HasGameRef<ManananggalGame> {
 
     final double topPipeHeight =
         screenHeight - groundHeight - bottomPipeHeight - dynamicPipeGap;
-    // if (bottomPipeHeight < minPipeHeight || topPipeHeight < minPipeHeight) {
-    //   return; // Do not add pipes if they don't meet the minimum height
-    // }
-
-    // ✅ Ensure pipes stay within bounds
-    final double safeTopHeight = topPipeHeight.clamp(
-        minPipeHeight, screenHeight - dynamicPipeGap - groundHeight);
-    final double safeBottomHeight =
-        bottomPipeHeight.clamp(minPipeHeight, screenHeight - groundHeight);
+ 
+    final double safeTopHeight = topPipeHeight.clamp(minPipeHeight, screenHeight - dynamicPipeGap - groundHeight);
+    final double safeBottomHeight = bottomPipeHeight.clamp(minPipeHeight, screenHeight - groundHeight);
 
     // ✅ Adjust pipe positions for "windowed" layout
     final bottomPipe = Obstacle(
@@ -77,13 +71,14 @@ class ObstacleManager extends Component with HasGameRef<ManananggalGame> {
     gameRef.add(bottomPipe);
     gameRef.add(topPipe);
 
-    // ✅ Randomly spawn a floating power-up
     if (Random().nextDouble() < 0.1) {
-      final floatingPowerUp = FloatingPowerUp(
-        Vector2(gameRef.size.x,
-            Random().nextDouble() * (screenHeight - groundHeight - 50)),
-        Vector2(40, 40),
-      );
+    final floatingPowerUp = FloatingPowerUp(
+      Vector2(
+        gameRef.size.x, // Align with the pipes
+        screenHeight - groundHeight - safeBottomHeight - 50, // Just above bottom pipe
+      ),
+      Vector2(40, 40),
+    );
       gameRef.add(floatingPowerUp);
     }
   }

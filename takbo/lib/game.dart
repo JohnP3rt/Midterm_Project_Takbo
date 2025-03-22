@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +7,12 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:takbo/components/background.dart';
 import 'package:takbo/components/bottom_power_up.dart';
+import 'package:takbo/components/floating_power_up.dart';
 import 'package:takbo/components/manananggal.dart';
 import 'package:takbo/components/ground.dart';
 import 'package:takbo/components/parallax_background.dart';
 import 'package:takbo/components/obstacle_manager.dart';
 import 'package:takbo/components/obstacle.dart';
-import 'package:takbo/components/score.dart';
 import 'package:takbo/constants.dart';
 
 class ManananggalGame extends FlameGame
@@ -20,13 +21,18 @@ class ManananggalGame extends FlameGame
   late Background background;
   late Ground ground;
   late ObstacleManager obstacleManager;
-  late ScoreText scoreText;
   late AudioPlayer _audioPlayer;
+  late AudioPlayer audioFlap;
   late ParallaxBackground parallax;
-  int score = 0;
+  ValueNotifier<int> score = ValueNotifier<int>(0);
   late SharedPreferences sharedPrefs;
   bool gameStart = false;
+  bool gameComplete = false;
+  bool isGameOver = false;
+  bool isPaused = false;
+  bool isComplete = false;
   var highestScore;
+
   @override
   FutureOr<void> onLoad() async {
     debugMode = false;
@@ -43,15 +49,15 @@ class ManananggalGame extends FlameGame
     add(ground);
 
     obstacleManager = ObstacleManager();
-    //add(obstacleManager);
-
-    scoreText = ScoreText();
-    //add(scoreText);
 
     _audioPlayer = AudioPlayer();
     await _audioPlayer.setAsset('assets/audio/scary_bg.mp3');
-    _audioPlayer.setLoopMode(LoopMode.one);
-    _audioPlayer.play();
+
+    audioFlap = AudioPlayer();
+    await audioFlap.setAsset('assets/audio/flap.wav');
+
+    _audioPlayer.setLoopMode(LoopMode
+        .one); //ginawa ko siyang all, diko na natest pero naka one lang sakin kanina, parang 1 time looping lang kasi
   }
 
   @override
@@ -64,6 +70,8 @@ class ManananggalGame extends FlameGame
   void onTap() {
     if (gameStart) {
       player.flap();
+      audioFlap.seek(Duration.zero);
+      audioFlap.play();
     }
   }
 
@@ -77,64 +85,97 @@ class ManananggalGame extends FlameGame
     player.isGliding = false;
   }
 
-  bool isGameOver = false;
-  bool isPaused = false;
-  bool isComplete = false;
+  
 
-  void incrementScore() => score += 1;
+  void incrementScore() => score.value += 1;
 
-  void incrementScoreBy(int points) => score += points;
+  void incrementScoreBy(int points) => score.value += points;
   int lastDifficultyIncrease = 0;
 
   void increaseDifficulty() {
-    if (score % 10 == 0 && score > 0 && lastDifficultyIncrease != score) {
+    if (score.value % 10 == 0 &&
+        score.value > 0 &&
+        lastDifficultyIncrease != score.value) {
       groundScrollingSpeed += 20;
       obstacleInterval = (obstacleInterval - .5).clamp(1.0, double.infinity);
-      lastDifficultyIncrease = score;
-      print('Scrolling Speed: $groundScrollingSpeed');
-      print('Obstacle Interval: $obstacleInterval');
+      lastDifficultyIncrease = score.value;
     }
+    print('Scrolling ' + groundScrollingSpeed.toString());
+    print('obstacleInterval ' + obstacleInterval.toString());
   }
 
   void compareScore() async {
     sharedPrefs = await SharedPreferences.getInstance();
     highestScore = sharedPrefs.getInt('highestScore');
     if (highestScore != null) {
-      if (score > highestScore) {
-        await sharedPrefs.setInt('highestScore', score);
+      if (score.value > highestScore) {
+        await sharedPrefs.setInt('highestScore', score.value);
       }
     } else {
-      await sharedPrefs.setInt('highestScore', score);
+      await sharedPrefs.setInt('highestScore', score.value);
     }
+  }
+
+  void togglePlayer({bool forceStop = false}) async {
+    if (forceStop) {
+      await _audioPlayer.stop();
+      return;
+    }
+
+    if (_audioPlayer.processingState == ProcessingState.ready &&
+        _audioPlayer.playing) {
+      await _audioPlayer.stop();
+      print('AudioPlayer stopped.');
+    } else {
+      _audioPlayer.seek(Duration.zero);
+      await _audioPlayer.play();
+      print('AudioPlayer playing.');
+    }
+  }
+
+  void gameDone() {
+    if (!gameComplete) {
+      gameComplete = true;
+      togglePause();
+      togglePlayer(forceStop: true);
+      overlays.add('Intermission');
+      overlays.remove('PauseButton');
+    }
+  }
+
+  void resumeAfterIntermission() {
+    overlays.remove('Intermission');
+    togglePlayer();
   }
 
   void gameOver() {
     if (isGameOver) return;
-
     isGameOver = true;
-    _audioPlayer.pause();
     pauseEngine();
     obstacleInterval = 3;
     groundScrollingSpeed = 150;
     overlays.remove('PauseButton');
+    overlays.remove('ScoreHUD');
     overlays.add('GameOverHUD');
-    remove(scoreText);
   }
 
   void resetGame() {
     player.position = Vector2(playerStartX, playerStartY);
     player.velocity = 0;
-    score = 0;
+    score.value = 0;
     isGameOver = false;
-    add(scoreText);
+    gameComplete = false;
     children.whereType<Obstacle>().forEach((pipe) => pipe.removeFromParent());
     children
         .whereType<BuntisPowerUp>()
         .forEach((buntis) => buntis.removeFromParent());
     resumeEngine();
-    _audioPlayer.seek(Duration.zero); // Reset audio playback
-    _audioPlayer.play();
+    children
+        .whereType<FloatingPowerUp>()
+        .forEach((power) => power.removeFromParent());
+    resumeEngine();
     overlays.remove('GameOverHUD');
+    overlays.add('ScoreHUD');
     overlays.add('PauseButton');
   }
 
@@ -153,17 +194,21 @@ class ManananggalGame extends FlameGame
 
   @override
   void update(double dt) {
-    compareScore();
     // TODO: implement update
+    compareScore();
     if (gameStart) {
       add(obstacleManager);
-      add(scoreText);
+      if(obstacleInterval >= 1.0){
+        increaseDifficulty();
+      }
+      
       overlays.remove('MainMenu');
     }
-    if (!isGameOver) {
-      //If di pa complete ang laro and not game over mag execute atoy
-      increaseDifficulty();
+
+    if (score.value >= 50 && !gameComplete) {
+      gameDone();
     }
+
     super.update(dt);
   }
 }
