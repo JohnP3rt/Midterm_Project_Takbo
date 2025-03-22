@@ -44,17 +44,18 @@ class Manananggal extends SpriteAnimationComponent with CollisionCallbacks, HasG
     // TODO: implement update
 
     if (!gameRef.gameStart) {
-      position = hiddenPosition; // Keep off-screen before the game starts
+      position = hiddenPosition; // Nakatago si Manananggalis
     } else {
-      // Smoothly move towards the target position
+      // Punta siya sa target position
       if (position.x < targetPosition.x) {
-        position.x += groundScrollingSpeed * dt; // Move to the right
+        position.x += groundScrollingSpeed * dt; // Move towards right
       } else {
         position.x = targetPosition.x; // Stop at the target position
-        // Gravity and jump mechanics
+        
         if (position.y < 0) {
           position.y = 0;
         }
+
         if (isGliding) {
           velocity = glideUpwardVelocity;
         } else {

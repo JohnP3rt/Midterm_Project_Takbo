@@ -51,7 +51,7 @@ class _StoryIntermissionScreenState extends State<StoryIntermissionScreen> {
         );
       } else {
         _timer?.cancel();
-        setState(() {}); // Ensure the UI updates when slideshow ends
+        setState(() {});
       }
     });
   }

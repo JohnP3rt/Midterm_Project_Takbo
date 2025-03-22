@@ -100,8 +100,6 @@ class ManananggalGame extends FlameGame
       obstacleInterval = (obstacleInterval - .5).clamp(1.0, double.infinity);
       lastDifficultyIncrease = score.value;
     }
-    print('Scrolling ' + groundScrollingSpeed.toString());
-    print('obstacleInterval ' + obstacleInterval.toString());
   }
 
   void compareScore() async {
@@ -125,11 +123,9 @@ class ManananggalGame extends FlameGame
     if (_audioPlayer.processingState == ProcessingState.ready &&
         _audioPlayer.playing) {
       await _audioPlayer.stop();
-      print('AudioPlayer stopped.');
     } else {
       _audioPlayer.seek(Duration.zero);
       await _audioPlayer.play();
-      print('AudioPlayer playing.');
     }
   }
 
